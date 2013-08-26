@@ -1,0 +1,126 @@
+#!/bin/bash
+
+# Credit to https://github.com/Kloadut/dokku-md-plugin/blob/master/commands
+# as this outlines the basic format followed by this plugins operations.
+set -e; 
+
+# Check if es namespace and if so set APP/PLUGIN
+if [[ $1 == es:* ]]; then
+	if [[ -z $2 ]]; then
+		echo "An app name must be specified"
+		exit 1
+	else
+		APP="$2"
+		if [[ -d "/home/git/$APP" ]]; then
+			APP_EXISTS=true
+		else
+			APP_EXISTS=false
+		fi
+	fi
+fi
+
+case "$1" in
+	es:create)
+		ES_IMAGE=elasticsearch/$APP
+		IMAGE=$(docker images | grep "foldr/elasticsearch" | awk '{print $3}')
+		if [[ .z $IMAGE ]]; then
+			echo "Elasticsearch image not found. Please run 'dokku plugins-install'"
+			exit 1
+		fi
+		if [[ -d "/var/lib/docker/volumes/elasticsearch-$APP" ]]; then
+			VOLUME="/var/lib/docker/volumes/elasticsearch-$APP/layer:/var/lib/elasticsearch
+			echo
+			echo "-----> Reusing elasticsearch/$APP"
+		else
+			VOLUME="/var/lib/elasticsearch"
+		fi
+
+		# Stop existing container with db
+		ID=$(docker ps | grep "$ES_IMAGE":latest | awk '{print $1}')
+		if [[ ! -z "$ID" ]]; then
+			docker stop $ID > /dev/null
+		fi
+
+		# Fork image
+		ID=$(docker run -d foldr/elasticsearch exit 0)
+		docker wait $ID > /dev/null
+		IMAGE=$(docker commit $ID)
+		docker tag $IMAGE $ES_IMAGE
+
+		# Launch container
+		ID=$(docker run -v $VOLUME -p 9200 -d $ES_IMAGE)
+		sleep 4
+
+		# Rename persitent volume
+		if [[ ! -d "/var/lib/docker/volumes/elasticsearch-$APP" ]]; then
+			VOLUME_PATH=$(docker inspect $ID | grep "/var/lib/docker/volumes/" | awk '{print $2}' | sed -e "s/\/layer//" | sed -e's/"//g')
+			mv $VOLUME_PATH "/var/lib/docker/volumes/elasticsearch-$APP"
+			sleep 1
+		fi
+
+		# Link to app
+		dokku elasticsearch:link $APP $APP
+		echo
+		echo "-----> Elasticsearch container created: $ES_IMAGE"
+		sleep 1
+		dokku elasticsearch:info $APP
+		;;
+
+	es:delete)
+		ES_IMAGE=elasticsearch/$APP
+	
+		# stop container
+		ID=$(docker ps -a | grep "$DB_IMAGE":latest | awk '{print $1}')
+		if [[ ! -z $ID ]]; then
+			docker stop $ID
+		fi
+		
+		# remove image
+		IMAGE=$(docker images | grep "$ES_IMAGE " | awk '{print $1}')
+		if [[ ! -z $IMAGE ]]; then
+			docker rmi $IMAGE
+		fi
+		echo
+		echo "-----> Elasticsearch container deleted: $ES_IMAGE"
+		;;
+
+	es:info)
+		ES_IMAGE=elasticsearch/$APP
+		ID=$(docker ps -a | grep "$ES_IMAGE":latest | awk '{print $1}')
+		IP=$(docker inspect $ID | grep IPAddress | awk '{print $2}' | tr -d ',"')
+		PORT=$(docker port $ID 9200)
+		echo
+		echo "        Host: $IP"
+		echo "        Port: $PORT"
+		echo
+		;;
+
+	es:link)
+		echo " CURRENTLY NOT AVAILABLE"
+		;;
+
+	es:logs)
+		ES_IMAGE=elasticsearch/$APP
+		ID=$(docker ps -a | grep "$ES_IMAGE" | awk '{print $1}')
+		docker logs $ID | tail -n 100
+		;;
+
+	es:install)
+		ES_IMAGE=elasticsearch/$APP
+		# if the image isn't running then start it
+		# once the application is running call `/usr/share/elasticsearch/bin/plugin -install mobz/elasticsearch-head`
+		#ID=$(docker ps -a | grep "$ES_IMAGE" | awk 
+
+	help)
+		echo "es:create <app>                   creates a new elasticsearch instance"
+		echo "es:delete <app>                   (unlink?)"
+		echo "es:info <app>                     displays details about the elasticsearch container"
+		echo "es:link <app>                     bind an app container to another"
+		echo "es:logs <app>                     output the last 100 logs for the container"
+		echo "es:install <app> <plugin>         install a plugin ie. 'mobz/elasticsearch-head'"
+		echo "es:install_url <app> <plugin-url> install a plugin from a url""
+		echo "es:list <app>                     list installed plugins
+		;;
+
+esac
+cat
