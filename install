@@ -1,4 +1,4 @@
 #!/bin/bash
 
 # Build image from base dokku image progrium/buildstep (ubuntu/openjdk)
-docker build -q=true -t arcus-io/docker-elasticsearch github.com/arcus-io/docker-elasticsearch
+docker build -q=false -t arcus-io/docker-elasticsearch github.com/arcus-io/docker-elasticsearch
