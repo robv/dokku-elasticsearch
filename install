@@ -1,4 +1,4 @@
 #!/bin/bash
 
 # Build image from base dokku image progrium/buildstep (ubuntu/openjdk)
-docker build -t foldr/elasticsearch .
+docker build -t bacongobbler/elasticsearch .
