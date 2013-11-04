@@ -1,4 +1,4 @@
 #!/bin/bash
 
 # Build image from base dokku image ./Dockerfile
-docker build .
+docker build . -q=false
