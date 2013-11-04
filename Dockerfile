@@ -1,6 +1,9 @@
-# DOCKER-VERSION 0.5.0
+FROM        ubuntu:quantal
+MAINTAINER        kload "kload@kload.fr"
 
-FROM progrium/buildstep
-RUN curl -O https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-0.90.3.deb
-RUN dpkg -i elasticsearch-0.90.3.deb
-RUN rm elasticsearch-0.90.3.deb
+RUN apt-get update
+RUN apt-get install openjdk-7-jre-headless -y
+ 
+RUN wget https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-0.90.5.deb
+RUN dpkg -i elasticsearch-0.90.5.deb
+RUN service elasticsearch start
