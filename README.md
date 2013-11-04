@@ -1,3 +1,5 @@
+Forked from: https://bitbucket.org/foldr/dokku-elasticsearch-plugin
+
 # Dokku Elasticsearch Plugin
 
 The dokku elasticsearch plugin adds an elasticsearch service to your
@@ -10,7 +12,7 @@ already installed.
 
 ```
 cd var/lib/dokku/plugins
-git clone https://bitbucket.org/foldr/dokku-elasticsearch-plugin
+git clone https://github.com/robv/dokku-elasticsearch
 dokku plugins-install
 ```
 
