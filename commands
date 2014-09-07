@@ -28,8 +28,8 @@ case "$1" in
 			exit 1
 		fi
 		if [[ -d "/var/lib/docker/volumes/elasticsearch-$APP" ]]; then
-			VOLUME="/var/lib/docker/volumes/elasticsearch-$APP/layer:/var/lib/elasticsearch
-			echo
+			VOLUME="/var/lib/docker/volumes/elasticsearch-$APP/layer:/var/lib/elasticsearch"
+			echo ""
 			echo "-----> Reusing elasticsearch/$APP"
 		else
 			VOLUME="/var/lib/elasticsearch"
@@ -70,7 +70,7 @@ case "$1" in
 		ES_IMAGE=elasticsearch/$APP
 	
 		# stop container
-		ID=$(docker ps -a | grep "$DB_IMAGE":latest | awk '{print $1}')
+		ID=$(docker ps -a | grep "$ES_IMAGE":latest | awk '{print $1}')
 		if [[ ! -z $ID ]]; then
 			docker stop $ID
 		fi
